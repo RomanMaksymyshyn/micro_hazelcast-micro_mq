@@ -26,15 +26,17 @@ def consuming(messages_list):
     )
     channel = connection.channel()
     channel.queue_declare(queue='mq_for_messages_service')
-    for method_frame, properties, body in channel.consume('mq_for_messages_service'):
-        print("ACCEPTED %r" % body)
-        print('early: ', messages_list)
-        messages_list.append(str(body))
-        print('Now ', messages_list)
+    def callback(ch, method, properties, body):    
+        print(" [x] Received %r" % body.decode())
+        messages_list.append(body.decode())
+        print(messages_list)
+    channel.basic_consume(queue='mq_for_messages_service', on_message_callback=callback, auto_ack=True)
+
+    print(' [*] Waiting for messages. To exit press CTRL+C')
+    channel.start_consuming()
 
 if __name__ == '__main__':
     ALL_TIME_MESSAGES_11 = []
     consuming(ALL_TIME_MESSAGES_11)
     print('LETS GO 1')
     app.run(host='0.0.0.0', port=1122, debug=False)
-
